@@ -17,13 +17,13 @@ DOWNLOAD_EXEC       = aria2c -c -x 15 -s 15
 .PHONY: all clean
 all: \
   $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch) \
-  $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/bin/cp
+  $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/.extracted
 	cd $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra && \
-		sudo ./apply_binaries.sh && \
 		sudo ./flash.sh $(L4T_target_board) $(L4T_target_block)
 
 clean:
 	-sudo rm -vrf $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/*
+	-sudo rm -vrf $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/.extracted
 
 $(DOWNLOAD_DIR):
 	mkdir -p $@
@@ -41,10 +41,12 @@ $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch): $(DOWNLOAD_D
 $(DOWNLOAD_DIR)/L4T_rootfs_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)_aarch64.tbz2:
 	$(DOWNLOAD_EXEC) $(L4T_rootfs_URL) -o $@
 
-$(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/bin/cp: \
+$(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/.extracted: \
     $(DOWNLOAD_DIR)/L4T_rootfs_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)_aarch64.tbz2 \
     $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)
-	sudo chown $(id -nu):$(id -ng) $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/
-	sudo tar vxjpf $< -C $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/
+	sudo chown $$(id -nu):$$(id -ng) $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/
+	sudo tar vxjpf $< -C $(dir $@) #$(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/
+	cd $(dir $(dir $@)) && sudo ./apply_binaries.sh
+	touch $@
 # --------------------------------------------------
 
