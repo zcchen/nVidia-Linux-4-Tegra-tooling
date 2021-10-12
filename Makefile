@@ -14,8 +14,15 @@ L4T_rootfs_URL      = https://developer.nvidia.com/embedded/l4t/r$(L4T_Ver_Major
 DOWNLOAD_DIR        = downloads
 DOWNLOAD_EXEC       = aria2c -c -x 15 -s 15
 
-.PHONY: all clean
-all: \
+.PHONY: all prepare flash clean
+
+all: prepare
+
+prepare: \
+  $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch) \
+  $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/.extracted
+
+flash: \
   $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch) \
   $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/.extracted
 	cd $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra && \
