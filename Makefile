@@ -12,7 +12,10 @@ L4T_rootfs_URL      = https://developer.nvidia.com/embedded/l4t/r$(L4T_Ver_Major
 # jeston_linux for Xavier series + TX2, jeston-t210_linux for Nano series + TX1
 
 DOWNLOAD_DIR        = downloads
-DOWNLOAD_EXEC       = aria2c -c -x 15 -s 15
+#DOWNLOAD_EXEC       = aria2c -c -x 15 -s 15
+#DOWNLOAD_OUTPUT     = -o
+DOWNLOAD_EXEC       = wget -c
+DOWNLOAD_OUTPUT     = -O
 
 .PHONY: all prepare flash clean
 
@@ -22,9 +25,7 @@ prepare: \
   $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch) \
   $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/.extracted
 
-flash: \
-  $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch) \
-  $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/.extracted
+flash:
 	cd $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra && \
 		sudo ./flash.sh $(L4T_target_board) $(L4T_target_block)
 
@@ -36,8 +37,8 @@ $(DOWNLOAD_DIR):
 	mkdir -p $@
 
 # ------------- Linux 4 Tegra Tooling ---------------
-$(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)_aarch64.tbz2:
-	$(DOWNLOAD_EXEC) $(L4T_drivers_URL) -o $@
+$(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)_aarch64.tbz2: $(DOWNLOAD_DIR)
+	$(DOWNLOAD_EXEC) $(L4T_drivers_URL) $(DOWNLOAD_OUTPUT) $@
 
 $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch): $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)_aarch64.tbz2
 	mkdir -p $@
@@ -45,15 +46,15 @@ $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch): $(DOWNLOAD_D
 # --------------------------------------------------
 
 # ------------- Linux 4 Tegra Image ----------------
-$(DOWNLOAD_DIR)/L4T_rootfs_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)_aarch64.tbz2:
-	$(DOWNLOAD_EXEC) $(L4T_rootfs_URL) -o $@
+$(DOWNLOAD_DIR)/L4T_rootfs_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)_aarch64.tbz2: $(DOWNLOAD_DIR)
+	$(DOWNLOAD_EXEC) $(L4T_rootfs_URL) $(DOWNLOAD_OUTPUT) $@
 
 $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/.extracted: \
     $(DOWNLOAD_DIR)/L4T_rootfs_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)_aarch64.tbz2 \
     $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)
 	sudo chown $$(id -nu):$$(id -ng) $(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/
-	sudo tar vxjpf $< -C $(dir $@) #$(DOWNLOAD_DIR)/L4T_drivers_r$(L4T_Ver_Major).$(L4T_Ver_Min+Patch)/Linux_for_Tegra/rootfs/
-	cd $(dir $(dir $@)) && sudo ./apply_binaries.sh
-	touch $@
+	sudo tar xjpf $< -C $(dir $@)
+	cd $(dir $@)/.. && sudo ./apply_binaries.sh
+	sudo touch $@
 # --------------------------------------------------
 
